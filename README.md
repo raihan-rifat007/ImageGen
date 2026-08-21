@@ -1,4 +1,3 @@
-```markdown
 # AI Image Generator Web Application
 
 A full-stack AI image generation app built with Flask and Pollinations.ai.  
