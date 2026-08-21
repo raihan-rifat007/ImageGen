@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Lab — AI Image Generator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23E1972F%22/><circle cx=%2232%22 cy=%2232%22 r=%2213%22 fill=%22none%22 stroke=%22%23201405%22 stroke-width=%224%22/><circle cx=%2232%22 cy=%2232%22 r=%225%22 fill=%22%23201405%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page">
+    <section class="panel-main">
+        <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+        <p class="eyebrow">Image Lab</p>
+        <h1>Describe a scene.<br>Watch it develop.</h1>
+        <p class="subtitle">Type a prompt, pick a style, and generate an image with AI.</p>
+        <div class="prompt-toolbar">
+            <button type="button" id="surprise-btn">🎲 Surprise me</button>
+        </div>
+        <form id="generate-form">
+            <input type="text" id="prompt" name="prompt" placeholder="A lighthouse on a stormy coast..." required>
+            <div class="options-row">
+                <select id="style-select" name="style">
+                    <option value="">No style</option>
+                    <option value="realistic photo">Realistic</option>
+                    <option value="anime style">Anime</option>
+                    <option value="oil painting">Oil Painting</option>
+                    <option value="cartoon style">Cartoon</option>
+                    <option value="cyberpunk style">Cyberpunk</option>
+                    <option value="watercolor painting">Watercolor</option>
+                </select>
+                <select id="ratio-select" name="ratio">
+                    <option value="square">Square</option>
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+                <button type="submit" id="generate-btn">Generate</button>
+            </div>
+        </form>
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Developing your image...</p>
+        </div>
+        <div id="error-message" class="hidden"></div>
+        <div id="result" class="hidden">
+            <div class="print-frame">
+                <img id="generated-image" src="" alt="Generated image">
+            </div>
+            <div class="result-actions">
+                <a id="download-btn" class="hidden" href="" download="generated-image.png">Download Image</a>
+                <button type="button" id="regenerate-btn" class="hidden">🔄 Regenerate</button>
+            </div>
+        </div>
+    </section>
+    <aside class="panel-history" id="history-section">
+        <div class="history-header">
+            <h2>Contact Sheet</h2>
+            <button id="clear-history-btn" title="Clear history">Clear</button>
+        </div>
+        <div id="history-grid"></div>
+        <p id="history-empty" class="history-empty">Generated images will appear here.</p>
+        <button id="toggle-history-btn" class="hidden">Show full history</button>
+    </aside>
+</div>
+<div id="gallery-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+        <div class="modal-header">
+            <h2>Full Gallery</h2>
+            <button id="close-gallery-btn" title="Close">✕</button>
+        </div>
+        <div id="gallery-grid"></div>
+    </div>
+</div>
+<div id="toast-container"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+  </html>
