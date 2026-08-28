@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Image Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        /* ── Reset & Base ── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #eaeef2;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .app {
+            max-width: 1400px;
+            width: 100%;
+            background: #0f0f16;
+            border-radius: 32px;
+            padding: 28px 32px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .logo img {
+            height: 34px;
+            filter: brightness(0) invert(1);
+        }
+        .logo span {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .logo span small {
+            font-weight: 300;
+            color: #888899;
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #9999aa;
+            letter-spacing: 0.4px;
+        }
+
+        /* ── Main Grid ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 28px;
+        }
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+
+        /* ── Left Side: Prompt + Gallery ── */
+        .prompt-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .prompt-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 20px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.2s;
+        }
+        .prompt-box:focus-within {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .prompt-box textarea {
+            width: 100%;
+            min-height: 76px;
+            background: transparent;
+            border: none;
+            color: #f0f0f5;
+            font-size: 15px;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+        }
+        .prompt-box textarea::placeholder {
+            color: #667;
+        }
+        .prompt-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .suggestions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .suggest-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            color: #999aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .suggest-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        /* ── Black & White Generate Button ── */
+        .btn-generate {
+            background: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s;
+            box-shadow: 0 2px 12px rgba(255, 255, 255, 0.06);
+            font-family: inherit;
+        }
+        .btn-generate:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+        .btn-generate:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-generate svg {
+            stroke: #000;
+            fill: #000;
+        }
+
+        /* ── Gallery ── */
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .gallery-header h3 {
+            font-weight: 500;
+            font-size: 14px;
+            color: #999aaa;
+        }
+        .gallery-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .gallery-actions button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: #999aaa;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-actions button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        .gallery-actions svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .gallery-grid.two-col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .gallery-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .img-card {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #14141e;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            cursor: pointer;
+            position: relative;
+            animation: fadeUp 0.4s ease both;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .img-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+        .img-card img {
+            width: 100%;
+            display: block;
+            aspect-ratio: var(--ar, 1);
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .img-card:hover img {
+            transform: scale(1.02);
+        }
+        .img-card .ratio-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 9px;
+            color: #aaaabb;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-weight: 500;
+        }
+        .img-card .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            opacity: 0;
+            transition: 0.3s;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .img-card:hover .overlay {
+            opacity: 1;
+        }
+        .img-card .overlay button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: inherit;
+            backdrop-filter: blur(4px);
+        }
+        .img-card .overlay button:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .img-card .overlay svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #667;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.25;
+            margin-bottom: 12px;
+        }
+        .empty-state h4 {
+            font-weight: 400;
+            font-size: 16px;
+            color: #888899;
+        }
+        .empty-state p {
+            font-size: 13px;
+            margin-top: 6px;
+            color: #556;
+        }
+
+        /* ── Right Sidebar ── */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 24px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            max-height: 580px;
+            overflow-y: auto;
+        }
+        .sidebar .group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .sidebar .group label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #778899;
+        }
+        .sidebar select,
+        .sidebar input[type="text"] {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #f0f0f5;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .sidebar select:focus,
+        .sidebar input:focus {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+        }
+        .sidebar select option {
+            background: #1a1a2a;
+        }
+        /* Small animation on select change (pulse) */
+        .sidebar select.select-animate {
+            animation: selectPulse 0.3s ease;
+        }
+        @keyframes selectPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.98);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .sidebar .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar .slider-row .slider-head {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #99aabb;
+        }
+        .sidebar .slider-row input[type="range"] {
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: #2a2a3a;
+            outline: none;
+            -webkit-appearance: none;
+            transition: background 0.2s;
+        }
+        .sidebar .slider-row input[type="range"]::-webkit-slider-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #0f0f16;
+            cursor: pointer;
+            -webkit-appearance: none;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+            transition: transform 0.15s;
+        }
+        .sidebar .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .style-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .style-chip {
+            padding: 4px 12px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 11px;
+            color: #99aabb;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .style-chip.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .style-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .neg-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 8px 14px;
+            color: #eaeef2;
+            width: 100%;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .neg-input:focus {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ── Progress ── */
+        .gen-progress {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #99aabb;
+        }
+        .gen-progress.show {
+            display: flex;
+        }
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Lightbox ── */
+        #lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            padding: 20px;
+        }
+        #lightbox.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .lb-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            animation: fadeUp 0.3s ease both;
+        }
+        .lb-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+            display: block;
+        }
+        .lb-close {
+            position: absolute;
+            top: -16px;
+            right: -16px;
+            background: #222;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .lb-close:hover {
+            background: #444;
+        }
+        .lb-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: center;
+        }
+        .lb-toolbar button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: #ccc;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .lb-toolbar button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .lb-prompt {
+            text-align: center;
+            color: #667;
+            font-size: 13px;
+            margin-top: 10px;
+            max-width: 600px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .sidebar {
+                max-height: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 16px;
+                padding: 16px;
+            }
+            .sidebar .group {
+                flex: 1;
+                min-width: 140px;
+            }
+        }
+        @media (max-width: 600px) {
+            .app {
+                padding: 16px;
+                border-radius: 20px;
+            }
+            .header {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .gallery-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .prompt-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-generate {
+                justify-content: center;
+            }
+            .main-grid {
+                gap: 16px;
+            }
+            .sidebar {
+                flex-direction: column;
+                gap: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header (no emoji) -->
+        <div class="header">
+            <a class="logo" href="#">
+                <img src="assets/Logo.png" alt="AI Studio" />
+                <span>AI<small>Studio</small></span>
+            </a>
+            <div class="badge">BETA</div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left: Prompt + Gallery -->
+            <div class="prompt-section">
+                <div class="prompt-box">
+                    <textarea id="promptInput" placeholder="Describe your image… e.g. 'A serene mountain lake at golden hour, misty forest, cinematic lighting'"></textarea>
+                    <div class="prompt-actions">
+                        <div class="suggestions" id="suggestions"></div>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div class="gen-progress" id="genProgress">
+                                <div class="spinner"></div>
+                                <span id="progressLabel">Generating…</span>
+                            </div>
+                            <button class="btn-generate" id="genBtn" onclick="generate()">
+                                <!-- Feather 'play' icon -->
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gallery -->
+                <div>
+                    <div class="gallery-header">
+                        <h3 id="resultCount">0 images</h3>
+                        <div class="gallery-actions">
+                            <button onclick="setLayout(2)" title="2 columns">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+                            </button>
+                            <button onclick="setLayout(3)" title="3 columns">
+                                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="gallery-grid" id="gallery">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/>
+                                <path d="M3 16l5-5 4 4 3-3 4 4"/>
+                            </svg>
+                            <h4>No images yet</h4>
+                            <p>Write a prompt and hit Generate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar">
+                <!-- Model -->
+                <div class="group">
+                    <label for="modelSelect">Model</label>
+                    <select id="modelSelect" onchange="animateSelect(this)">
+                        <option value="flux-schnell">FLUX.1-schnell (fast)</option>
+                        <option value="flux-dev">FLUX.1-dev (best)</option>
+                        <option value="sdxl">Stable Diffusion XL</option>
+                        <option value="sd3">Stable Diffusion 3</option>
+                        <option value="realvis">RealVisXL (photo)</option>
+                        <option value="playground">Playground v2.5</option>
+                    </select>
+                </div>
+
+                <!-- Ratio -->
+                <div class="group">
+                    <label for="ratioSelect">Aspect Ratio</label>
+                    <select id="ratioSelect" onchange="animateSelect(this)">
+                        <option value="square">1:1</option>
+                        <option value="portrait">3:4</option>
+                        <option value="landscape" selected>4:3</option>
+                        <option value="wide">16:9</option>
+                        <option value="tall">9:16</option>
+                    </select>
+                </div>
+
+                <!-- Style -->
+                <div class="group">
+                    <label>Style</label>
+                    <div class="style-chips" id="styleChips"></div>
+                </div>
+
+                <!-- Advanced -->
+                <div class="group">
+                    <label>Advanced</label>
+                    <div class="slider-row">
+                        <div class="slider-head"><span>Steps</span><span id="stepsVal">28</span></div>
+                        <input type="range" id="steps" min="10" max="50" value="28" oninput="updateSlider(this,'stepsVal')">
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-head"><span>Guidance</span><span id="guidanceVal">7.5</span></div>
+                        <input type="range" id="guidance" min="1" max="20" step="0.5" value="7.5" oninput="updateSlider(this,'guidanceVal')">
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-head"><span>Seed</span><span id="seedVal">Random</span></div>
+                        <input type="range" id="seed" min="-1" max="9999" value="-1" oninput="updateSlider(this,'seedVal',true)">
+                    </div>
+                    <input type="text" id="negPrompt" class="neg-input" placeholder="Negative prompt (e.g. blurry, low quality)" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" onclick="if(event.target===this)closeLb()">
+        <div class="lb-content">
+            <button class="lb-close" onclick="closeLb()">✕</button>
+            <img id="lbImg" src="" alt="" />
+            <div class="lb-toolbar">
+                <button onclick="downloadLb()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download
+                </button>
+                <button onclick="copyLbUrl()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    Copy URL
+                </button>
+            </div>
+            <p class="lb-prompt" id="lbPrompt"></p>
+        </div>
+    </div>
+
+    <script>
+        // ── Data ──
+        const STYLES = [
+            'Photorealistic', 'Cinematic', 'Oil Painting', 'Watercolor',
+            'Anime', 'Digital Art', 'Sketch', '3D Render',
+            'Fantasy', 'Pixel Art', 'Minimalist', 'Dark Fantasy'
+        ];
+        const SUGGESTIONS = [
+            'Neon cyberpunk city at night',
+            'Portrait of a woman in golden light',
+            'Magical forest with glowing mushrooms',
+            'Abstract fluid art, vibrant colors',
+            'Underwater palace, bioluminescent',
+            'Vintage Japanese street, cherry blossom'
+        ];
+
+        let selectedStyle = '';
+        let images = [];
+        let generating = false;
+        let currentLbUrl = '';
+        let currentLbPrompt = '';
+
+        // ── Init ──
+        (function init() {
+            buildStyles();
+            buildSuggestions();
+            updateSliderAll();
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeLb();
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+            });
+        })();
+
+        function buildStyles() {
+            const container = document.getElementById('styleChips');
+            STYLES.forEach(s => {
+                const chip = document.createElement('span');
+                chip.className = 'style-chip';
+                chip.textContent = s;
+                chip.onclick = () => {
+                    selectedStyle = (selectedStyle === s) ? '' : s;
+                    document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
+                    if (selectedStyle) chip.classList.add('active');
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function buildSuggestions() {
+            const container = document.getElementById('suggestions');
+            const pick = SUGGESTIONS.sort(() => Math.random() - .5).slice(0, 3);
+            pick.forEach(s => {
+                const chip = document.createElement('span');
+                chip.className = 'suggest-chip';
+                chip.textContent = s;
+                chip.onclick = () => {
+                    document.getElementById('promptInput').value = s;
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function updateSlider(el, valId, isSeed = false) {
+            const v = parseFloat(el.value);
+            const d = document.getElementById(valId);
+            d.textContent = isSeed ? (v === -1 ? 'Random' : Math.round(v)) : (Number.isInteger(v) ? v : v.toFixed(1));
+            const pct = ((v - +el.min) / (+el.max - +el.min) * 100).toFixed(1);
+            el.style.setProperty('--val', pct + '%');
+        }
+
+        function updateSliderAll() {
+            updateSlider(document.getElementById('steps'), 'stepsVal');
+            updateSlider(document.getElementById('guidance'), 'guidanceVal');
+            updateSlider(document.getElementById('seed'), 'seedVal', true);
+        }
+
+        function setLayout(n) {
+            const g = document.getElementById('gallery');
+            g.className = 'gallery-grid ' + (n === 2 ? 'two-col' : 'three-col');
+        }
+
+        // ── Animation on select change ──
+        function animateSelect(el) {
+            el.classList.remove('select-animate');
+            // force reflow
+            void el.offsetWidth;
+            el.classList.add('select-animate');
+        }
+
+        // ── Generate ──
+        async function generate() {
+            if (generating) return;
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) { toast('Please enter a prompt'); return; }
+
+            generating = true;
+            const btn = document.getElementById('genBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Generating…';
+            document.getElementById('genProgress').classList.add('show');
+            document.getElementById('progressLabel').textContent = 'Creating…';
+
+            const neg = document.getElementById('negPrompt').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            const ratio = document.getElementById('ratioSelect').value;
+            const steps = parseInt(document.getElementById('steps').value);
+            const guidance = parseFloat(document.getElementById('guidance').value);
+            const seed = parseInt(document.getElementById('seed').value);
+
+            const style = selectedStyle;
+            const fullPrompt = [prompt, style, neg ? `avoid: ${neg}` : ''].filter(Boolean).join(', ');
+
+            // Add skeleton
+            const skeleton = document.createElement('div');
+            skeleton.className = 'img-card skeleton';
+            skeleton.style.aspectRatio = '1';
+            skeleton.style.background = '#1a1a2a';
+            const gallery = document.getElementById('gallery');
+            const empty = gallery.querySelector('.empty-state');
+            if (empty) empty.remove();
+            gallery.prepend(skeleton);
+
+            try {
+                const resp = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: fullPrompt,
+                        negative: neg,
+                        model: model,
+                        ratio: ratio,
+                        steps: steps,
+                        guidance: guidance,
+                        seed: seed,
+                        style: style
+                    })
+                });
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                skeleton.remove();
+                addImageCard(data.image, prompt);
+                images.push({ url: data.image, prompt });
+                updateCount();
+                toast('Image generated!');
+            } catch (err) {
+                skeleton.remove();
+                if (gallery.querySelectorAll('.img-card').length === 0) showEmpty();
+                toast('Error: ' + err.message, 'error');
+                console.error(err);
+            }
+
+            generating = false;
+            btn.disabled = false;
+            btn.innerHTML =
+                `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> Generate`;
+            document.getElementById('genProgress').classList.remove('show');
+        }
+
+        function addImageCard(url, prompt) {
+            const card = document.createElement('div');
+            card.className = 'img-card';
+            const ratio = document.getElementById('ratioSelect').value;
+            card.style.setProperty('--ar', '1');
+            card.innerHTML = `
+                <img src="${url}" alt="${prompt}" />
+                <div class="ratio-badge">${ratio}</div>
+                <div class="overlay">
+                    <button onclick="event.stopPropagation(); openLb('${url}','${prompt.replace(/'/g,"\\'")}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6s1-2 5-2 7 4 7 4-2 5-7 5-5-3-5-7z"/><circle cx="12" cy="12" r="3"/><path d="M14 6s1-2 5-2c4 0 4 3 4 3s-1 5-6 5"/></svg>
+                        View
+                    </button>
+                    <button onclick="event.stopPropagation(); downloadImg('${url}','${prompt.replace(/'/g,"\\'")}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Save
+                    </button>
+                </div>
+            `;
+            const gallery = document.getElementById('gallery');
+            gallery.prepend(card);
+        }
+
+        function showEmpty() {
+            const g = document.getElementById('gallery');
+            if (g.querySelector('.empty-state')) return;
+            g.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/><path d="M3 16l5-5 4 4 3-3 4 4"/></svg>
+                    <h4>No images yet</h4>
+                    <p>Write a prompt and hit Generate</p>
+                </div>
+            `;
+        }
+
+        function updateCount() {
+            const n = document.querySelectorAll('.img-card:not(.skeleton)').length;
+            document.getElementById('resultCount').textContent = n + ' image' + (n !== 1 ? 's' : '');
+        }
+
+        // ── Lightbox ──
+        function openLb(url, prompt) {
+            currentLbUrl = url;
+            currentLbPrompt = prompt;
+            document.getElementById('lbImg').src = url;
+            document.getElementById('lbPrompt').textContent = prompt;
+            document.getElementById('lightbox').classList.add('open');
+        }
+
+        function closeLb() {
+            document.getElementById('lightbox').classList.remove('open');
+        }
+
+        function downloadLb() {
+            downloadImg(currentLbUrl, currentLbPrompt);
+        }
+
+        function copyLbUrl() {
+            navigator.clipboard.writeText(currentLbUrl).then(() => toast('URL copied!'));
+        }
+
+        async function downloadImg(url, prompt) {
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'ai-image-' + (prompt || '').slice(0, 30).replace(/\s+/g, '-') + '.png';
+                a.click();
+                toast('Downloading…');
+            } catch {
+                window.open(url, '_blank');
+            }
+        }
+
+        // ── Toast ──
+        function toast(msg, type = 'info') {
+            const el = document.createElement('div');
+            el.style.cssText = `
+                position: fixed; bottom: 24px; right: 24px;
+                background: #1a1a2a; color: #eaeef2;
+                padding: 12px 20px; border-radius: 12px;
+                border: 1px solid rgba(255,255,255,0.06);
+                box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+                font-size: 13px; z-index: 1000;
+                transform: translateX(120px); opacity: 0;
+                transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+                max-width: 300px;
+            `;
+            el.textContent = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => {
+                el.style.transform = 'translateX(0)';
+                el.style.opacity = '1';
+            });
+            setTimeout(() => {
+                el.style.transform = 'translateX(120px)';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 400);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
