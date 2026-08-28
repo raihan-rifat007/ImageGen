@@ -1,1034 +1,953 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Image Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <style>
-        /* ── Reset & Base ── */
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #0a0a0f;
-            color: #eaeef2;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .app {
-            max-width: 1400px;
-            width: 100%;
-            background: #0f0f16;
-            border-radius: 32px;
-            padding: 28px 32px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Image Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:#0c0c0f;color:#e8e8f0;min-height:100vh;-webkit-font-smoothing:antialiased}
 
-        /* ── Header ── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-        .logo img {
-            height: 34px;
-            filter: brightness(0) invert(1);
-        }
-        .logo span {
-            font-size: 20px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -0.3px;
-        }
-        .logo span small {
-            font-weight: 300;
-            color: #888899;
-        }
-        .badge {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #9999aa;
-            letter-spacing: 0.4px;
-        }
+/* ── Variables ── */
+:root{
+  --bg:#0c0c0f;
+  --bg2:#131318;
+  --bg3:#1a1a22;
+  --border:rgba(255,255,255,.07);
+  --border-hover:rgba(255,255,255,.14);
+  --accent:#7c6aff;
+  --accent2:#a855f7;
+  --accent-glow:rgba(124,106,255,.25);
+  --text:#e8e8f0;
+  --text2:#9494a8;
+  --text3:#5a5a6e;
+  --radius:14px;
+  --radius-sm:8px;
+  --shadow:0 8px 32px rgba(0,0,0,.4);
+}
 
-        /* ── Main Grid ── */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 28px;
-        }
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-        }
+/* ── Layout ── */
+.container{max-width:1280px;margin:0 auto;padding:0 20px}
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
 
-        /* ── Left Side: Prompt + Gallery ── */
-        .prompt-section {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .prompt-box {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 20px 24px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: border-color 0.2s;
-        }
-        .prompt-box:focus-within {
-            border-color: rgba(255, 255, 255, 0.12);
-        }
-        .prompt-box textarea {
-            width: 100%;
-            min-height: 76px;
-            background: transparent;
-            border: none;
-            color: #f0f0f5;
-            font-size: 15px;
-            font-family: inherit;
-            line-height: 1.6;
-            resize: vertical;
-            outline: none;
-        }
-        .prompt-box textarea::placeholder {
-            color: #667;
-        }
-        .prompt-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .suggestions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .suggest-chip {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 11px;
-            color: #999aaa;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .suggest-chip:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
+/* ── Header ── */
+header{
+  border-bottom:1px solid var(--border);
+  background:rgba(12,12,15,.85);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:100;
+}
+.header-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;max-width:1280px;margin:0 auto;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.logo-icon svg{width:18px;height:18px;color:#fff}
+.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.logo-text span{color:var(--accent)}
+.header-badge{
+  font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:20px;
+  background:rgba(124,106,255,.12);
+  border:1px solid rgba(124,106,255,.2);
+  color:var(--accent);letter-spacing:.3px;
+}
 
-        /* ── Black & White Generate Button ── */
-        .btn-generate {
-            background: #fff;
-            border: none;
-            padding: 10px 28px;
-            border-radius: 40px;
-            color: #000;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.25s;
-            box-shadow: 0 2px 12px rgba(255, 255, 255, 0.06);
-            font-family: inherit;
-        }
-        .btn-generate:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
-        }
-        .btn-generate:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .btn-generate svg {
-            stroke: #000;
-            fill: #000;
-        }
+/* ── Main grid ── */
+.main{
+  display:grid;
+  grid-template-columns:340px 1fr;
+  gap:0;
+  min-height:calc(100vh - 61px);
+}
+@media(max-width:768px){
+  .main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+}
 
-        /* ── Gallery ── */
-        .gallery-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-        .gallery-header h3 {
-            font-weight: 500;
-            font-size: 14px;
-            color: #999aaa;
-        }
-        .gallery-actions {
-            display: flex;
-            gap: 6px;
-        }
-        .gallery-actions button {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 6px 10px;
-            border-radius: 8px;
-            color: #999aaa;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .gallery-actions button:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
-        .gallery-actions svg {
-            width: 16px;
-            height: 16px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-        }
+/* ── Sidebar ── */
+.sidebar{
+  border-right:1px solid var(--border);
+  padding:24px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:20px;
+  background:var(--bg2);
+}
 
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
-            max-height: 520px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-        .gallery-grid.two-col {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .gallery-grid.three-col {
-            grid-template-columns: repeat(3, 1fr);
-        }
+/* ── Section label ── */
+.section-label{
+  font-size:11px;font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--text3);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.section-label svg{width:13px;height:13px;color:var(--accent)}
 
-        .img-card {
-            border-radius: 16px;
-            overflow: hidden;
-            background: #14141e;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-            cursor: pointer;
-            position: relative;
-            animation: fadeUp 0.4s ease both;
-        }
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .img-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-        }
-        .img-card img {
-            width: 100%;
-            display: block;
-            aspect-ratio: var(--ar, 1);
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        .img-card:hover img {
-            transform: scale(1.02);
-        }
-        .img-card .ratio-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            padding: 2px 10px;
-            border-radius: 30px;
-            font-size: 9px;
-            color: #aaaabb;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            font-weight: 500;
-        }
-        .img-card .overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 16px;
-            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-            opacity: 0;
-            transition: 0.3s;
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-        .img-card:hover .overlay {
-            opacity: 1;
-        }
-        .img-card .overlay button {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 6px 14px;
-            border-radius: 30px;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-family: inherit;
-            backdrop-filter: blur(4px);
-        }
-        .img-card .overlay button:hover {
-            background: rgba(255, 255, 255, 0.18);
-        }
-        .img-card .overlay svg {
-            width: 13px;
-            height: 13px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-        }
+/* ── Prompt area ── */
+.prompt-wrap{position:relative}
+.prompt-field{
+  width:100%;min-height:110px;resize:vertical;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  color:var(--text);font-size:14px;font-family:inherit;line-height:1.6;
+  transition:border-color .2s ease,box-shadow .2s ease;
+  outline:none;
+}
+.prompt-field:focus{
+  border-color:rgba(124,106,255,.5);
+  box-shadow:0 0 0 3px var(--accent-glow);
+}
+.prompt-field::placeholder{color:var(--text3)}
+.char-count{
+  position:absolute;bottom:10px;right:12px;
+  font-size:11px;color:var(--text3);pointer-events:none;
+}
+.char-count.warn{color:#f59e0b}
 
-        .empty-state {
-            grid-column: 1/-1;
-            text-align: center;
-            padding: 60px 20px;
-            color: #667;
-        }
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            opacity: 0.25;
-            margin-bottom: 12px;
-        }
-        .empty-state h4 {
-            font-weight: 400;
-            font-size: 16px;
-            color: #888899;
-        }
-        .empty-state p {
-            font-size: 13px;
-            margin-top: 6px;
-            color: #556;
-        }
+/* ── Negative prompt ── */
+.neg-prompt{
+  width:100%;resize:vertical;min-height:56px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:11px 14px;
+  color:var(--text2);font-size:13px;font-family:inherit;line-height:1.6;
+  outline:none;transition:border-color .2s ease,box-shadow .2s ease;
+}
+.neg-prompt:focus{border-color:rgba(239,68,68,.4);box-shadow:0 0 0 3px rgba(239,68,68,.1)}
+.neg-prompt::placeholder{color:var(--text3)}
 
-        /* ── Right Sidebar ── */
-        .sidebar {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 24px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-            max-height: 580px;
-            overflow-y: auto;
-        }
-        .sidebar .group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .sidebar .group label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: #778899;
-        }
-        .sidebar select,
-        .sidebar input[type="text"] {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            padding: 10px 14px;
-            color: #f0f0f5;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-            width: 100%;
-            transition: all 0.25s ease;
-            cursor: pointer;
-        }
-        .sidebar select:focus,
-        .sidebar input:focus {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
-        }
-        .sidebar select option {
-            background: #1a1a2a;
-        }
-        /* Small animation on select change (pulse) */
-        .sidebar select.select-animate {
-            animation: selectPulse 0.3s ease;
-        }
-        @keyframes selectPulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(0.98);
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
+/* ── Model selector ── */
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.model-btn{
+  padding:10px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--bg3);
+  color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;
+  transition:all .2s ease;text-align:left;display:flex;flex-direction:column;gap:3px;
+}
+.model-btn:hover{border-color:var(--border-hover);color:var(--text)}
+.model-btn.active{
+  border-color:rgba(124,106,255,.5);
+  background:rgba(124,106,255,.1);color:var(--text);
+  box-shadow:0 0 0 1px rgba(124,106,255,.25);
+}
+.model-btn .mb-name{font-weight:600;font-size:13px}
+.model-btn .mb-desc{font-size:10px;color:var(--text3);margin-top:2px}
+.model-btn.active .mb-desc{color:rgba(167,149,255,.7)}
+.model-btn .mb-badge{
+  display:inline-block;font-size:9px;font-weight:600;letter-spacing:.5px;
+  padding:1px 6px;border-radius:4px;
+  background:rgba(124,106,255,.15);color:var(--accent);
+  text-transform:uppercase;margin-top:4px;
+}
+.model-btn.free .mb-badge{background:rgba(34,197,94,.12);color:#22c55e}
 
-        .sidebar .slider-row {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .sidebar .slider-row .slider-head {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #99aabb;
-        }
-        .sidebar .slider-row input[type="range"] {
-            width: 100%;
-            height: 3px;
-            border-radius: 2px;
-            background: #2a2a3a;
-            outline: none;
-            -webkit-appearance: none;
-            transition: background 0.2s;
-        }
-        .sidebar .slider-row input[type="range"]::-webkit-slider-thumb {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #fff;
-            border: 2px solid #0f0f16;
-            cursor: pointer;
-            -webkit-appearance: none;
-            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
-            transition: transform 0.15s;
-        }
-        .sidebar .slider-row input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-        }
-        .style-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .style-chip {
-            padding: 4px 12px;
-            border-radius: 30px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 11px;
-            color: #99aabb;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .style-chip.active {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
-        }
-        .style-chip:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.12);
-        }
+/* ── Style chips ── */
+.style-grid{display:flex;flex-wrap:wrap;gap:7px}
+.style-chip{
+  padding:6px 12px;border-radius:20px;
+  border:1px solid var(--border);
+  background:var(--bg3);
+  color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;
+  transition:all .2s ease;
+}
+.style-chip:hover{border-color:var(--border-hover);color:var(--text)}
+.style-chip.active{
+  border-color:rgba(124,106,255,.5);
+  background:rgba(124,106,255,.12);color:var(--accent);
+}
 
-        .neg-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            padding: 8px 14px;
-            color: #eaeef2;
-            width: 100%;
-            font-size: 12px;
-            font-family: inherit;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .neg-input:focus {
-            border-color: rgba(255, 255, 255, 0.15);
-        }
+/* ── Ratio selector ── */
+.ratio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ratio-btn{
+  padding:10px 8px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg3);
+  cursor:pointer;transition:all .2s ease;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  color:var(--text2);
+}
+.ratio-btn:hover{border-color:var(--border-hover);color:var(--text)}
+.ratio-btn.active{
+  border-color:rgba(124,106,255,.5);background:rgba(124,106,255,.1);color:var(--accent);
+}
+.ratio-preview{
+  border:1.5px solid currentColor;border-radius:3px;opacity:.7;
+  transition:all .2s ease;
+}
+.ratio-btn.active .ratio-preview{opacity:1}
+.ratio-btn span{font-size:11px;font-weight:500}
 
-        /* ── Progress ── */
-        .gen-progress {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: #99aabb;
-        }
-        .gen-progress.show {
-            display: flex;
-        }
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid #fff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+/* ── Sliders ── */
+.slider-row{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.slider-header{display:flex;justify-content:space-between;align-items:center}
+.slider-label{font-size:13px;font-weight:500;color:var(--text2)}
+.slider-val{
+  font-size:12px;font-weight:600;color:var(--accent);
+  background:rgba(124,106,255,.1);padding:2px 8px;border-radius:5px;
+}
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;
+  background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--val,50%),var(--bg3) var(--val,50%),var(--bg3) 100%);
+  outline:none;border:none;appearance:none;-webkit-appearance:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  width:16px;height:16px;border-radius:50%;background:var(--accent);
+  border:2px solid #fff;box-shadow:0 0 8px var(--accent-glow);
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  transition:transform .15s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
-        /* ── Lightbox ── */
-        #lightbox {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(20px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s;
-            padding: 20px;
-        }
-        #lightbox.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        .lb-content {
-            max-width: 90vw;
-            max-height: 90vh;
-            position: relative;
-            animation: fadeUp 0.3s ease both;
-        }
-        .lb-content img {
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 16px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
-            display: block;
-        }
-        .lb-close {
-            position: absolute;
-            top: -16px;
-            right: -16px;
-            background: #222;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-        .lb-close:hover {
-            background: #444;
-        }
-        .lb-toolbar {
-            display: flex;
-            gap: 10px;
-            margin-top: 14px;
-            justify-content: center;
-        }
-        .lb-toolbar button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 8px 20px;
-            border-radius: 30px;
-            color: #ccc;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .lb-toolbar button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-        .lb-prompt {
-            text-align: center;
-            color: #667;
-            font-size: 13px;
-            margin-top: 10px;
-            max-width: 600px;
-        }
+/* ── Generate button ── */
+.btn-generate{
+  width:100%;padding:14px 20px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;transition:all .25s ease;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 4px 20px rgba(124,106,255,.35);
+  letter-spacing:-.1px;
+}
+.btn-generate:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 28px rgba(124,106,255,.5);
+}
+.btn-generate:active{transform:translateY(0)}
+.btn-generate:disabled{
+  opacity:.5;cursor:not-allowed;transform:none;
+  box-shadow:0 4px 20px rgba(124,106,255,.15);
+}
+.btn-generate svg{width:18px;height:18px}
 
-        /* ── Responsive ── */
-        @media (max-width: 1024px) {
-            .sidebar {
-                max-height: none;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 16px;
-                padding: 16px;
-            }
-            .sidebar .group {
-                flex: 1;
-                min-width: 140px;
-            }
-        }
-        @media (max-width: 600px) {
-            .app {
-                padding: 16px;
-                border-radius: 20px;
-            }
-            .header {
-                flex-wrap: wrap;
-                gap: 12px;
-            }
-            .gallery-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .prompt-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-generate {
-                justify-content: center;
-            }
-            .main-grid {
-                gap: 16px;
-            }
-            .sidebar {
-                flex-direction: column;
-                gap: 14px;
-            }
-        }
-    </style>
+/* ── Canvas / Output ── */
+.canvas-area{
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.canvas-toolbar{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-shrink:0;background:rgba(19,19,24,.7);backdrop-filter:blur(12px);
+}
+.toolbar-left{display:flex;align-items:center;gap:10px}
+.toolbar-title{font-size:13px;font-weight:600;color:var(--text2)}
+.result-count{
+  font-size:11px;padding:2px 8px;border-radius:20px;
+  background:var(--bg3);border:1px solid var(--border);color:var(--text3);
+}
+.toolbar-right{display:flex;gap:8px}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg3);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:all .2s ease;
+}
+.icon-btn:hover{border-color:var(--border-hover);color:var(--text);background:var(--bg2)}
+.icon-btn svg{width:16px;height:16px}
+
+/* ── Gallery grid ── */
+.gallery{
+  flex:1;overflow-y:auto;padding:20px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;align-content:start;
+}
+.gallery.layout-2col{grid-template-columns:repeat(2,1fr)}
+.gallery.layout-3col{grid-template-columns:repeat(3,1fr)}
+
+/* ── Empty state ── */
+.empty-state{
+  grid-column:1/-1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;gap:16px;text-align:center;
+  color:var(--text3);
+}
+.empty-icon{
+  width:64px;height:64px;border-radius:16px;
+  background:var(--bg3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:4px;
+}
+.empty-icon svg{width:28px;height:28px;color:var(--text3)}
+.empty-title{font-size:16px;font-weight:600;color:var(--text2)}
+.empty-sub{font-size:13px;line-height:1.6;max-width:280px}
+
+/* ── Image card ── */
+.img-card{
+  border-radius:var(--radius);overflow:hidden;
+  background:var(--bg3);border:1px solid var(--border);
+  transition:border-color .25s ease,transform .25s ease,box-shadow .25s ease;
+  cursor:pointer;position:relative;group:true;
+}
+.img-card:hover{
+  border-color:rgba(124,106,255,.3);
+  transform:translateY(-2px);
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+}
+.img-card img{
+  width:100%;display:block;
+  aspect-ratio:var(--ar,1);object-fit:cover;
+  transition:transform .4s ease;
+}
+.img-card:hover img{transform:scale(1.02)}
+.img-card-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 50%);
+  opacity:0;transition:opacity .25s ease;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:14px;
+}
+.img-card:hover .img-card-overlay{opacity:1}
+.img-card-prompt{
+  font-size:12px;line-height:1.5;color:rgba(255,255,255,.85);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  margin-bottom:10px;
+}
+.img-card-actions{display:flex;gap:7px}
+.card-action-btn{
+  flex:1;padding:7px;border-radius:6px;border:none;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(8px);
+  color:#fff;font-size:11px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:background .2s ease;
+}
+.card-action-btn:hover{background:rgba(255,255,255,.22)}
+.card-action-btn svg{width:13px;height:13px}
+.img-card-badge{
+  position:absolute;top:10px;right:10px;
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;
+  backdrop-filter:blur(8px);background:rgba(0,0,0,.5);color:rgba(255,255,255,.7);
+  letter-spacing:.5px;text-transform:uppercase;
+}
+
+/* ── Skeleton loader ── */
+.skeleton{
+  border-radius:var(--radius);overflow:hidden;
+  background:var(--bg3);border:1px solid var(--border);
+  aspect-ratio:1;position:relative;
+}
+.skeleton::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.04) 50%,transparent 100%);
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ── Progress indicator ── */
+.gen-progress{
+  display:none;align-items:center;gap:10px;
+  font-size:13px;color:var(--text2);
+}
+.gen-progress.show{display:flex}
+.progress-ring{
+  width:18px;height:18px;
+  animation:spin .8s linear infinite;
+}
+.progress-ring circle{
+  stroke:var(--accent);stroke-width:2;fill:none;
+  stroke-dasharray:45;stroke-dashoffset:15;
+  stroke-linecap:round;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Lightbox ── */
+#lightbox{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;visibility:hidden;
+  transition:opacity .3s ease,visibility .3s ease;
+}
+#lightbox.open{opacity:1;visibility:visible}
+.lb-inner{
+  position:relative;max-width:min(90vw,900px);max-height:90vh;
+  transform:scale(.95);transition:transform .3s cubic-bezier(.22,1,.36,1);
+}
+#lightbox.open .lb-inner{transform:scale(1)}
+.lb-img{
+  max-width:100%;max-height:90vh;
+  object-fit:contain;border-radius:12px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  display:block;
+}
+.lb-close{
+  position:absolute;top:-14px;right:-14px;
+  width:36px;height:36px;border-radius:50%;
+  background:#ff4444;border:none;color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+}
+.lb-close:hover{background:#ff2222}
+.lb-close svg{width:16px;height:16px}
+.lb-toolbar{
+  display:flex;gap:10px;margin-top:14px;justify-content:center;
+}
+.lb-btn{
+  padding:9px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;gap:6px;
+  transition:all .2s ease;
+}
+.lb-btn:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.25)}
+.lb-btn svg{width:15px;height:15px}
+.lb-prompt{
+  text-align:center;margin-top:10px;font-size:13px;
+  color:rgba(255,255,255,.4);max-width:600px;margin-inline:auto;line-height:1.6;
+}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:1000;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+.toast-item{
+  padding:12px 16px;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border);
+  font-size:13px;color:var(--text);
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:10px;
+  transform:translateX(120px);opacity:0;
+  transition:all .3s cubic-bezier(.22,1,.36,1);
+  pointer-events:all;max-width:300px;
+}
+.toast-item.show{transform:translateX(0);opacity:1}
+.toast-item.success{border-color:rgba(34,197,94,.25)}
+.toast-item.error{border-color:rgba(239,68,68,.25)}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast-item.success .toast-dot{background:#22c55e}
+.toast-item.error .toast-dot{background:#ef4444}
+.toast-item.info .toast-dot{background:var(--accent)}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ── Prompt suggestions ── */
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.suggest-chip{
+  padding:4px 10px;border-radius:20px;font-size:11px;
+  border:1px solid var(--border);background:var(--bg3);
+  color:var(--text3);cursor:pointer;transition:all .2s ease;
+}
+.suggest-chip:hover{border-color:var(--border-hover);color:var(--text2)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.1)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  .header-inner{padding:12px 16px}
+  .sidebar{padding:16px;order:2;max-height:60vh;overflow-y:auto}
+  .canvas-area{order:1;min-height:50vh}
+  .gallery{padding:14px;grid-template-columns:repeat(2,1fr);gap:10px}
+  .model-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── Animations ── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.fade-in-up{animation:fadeInUp .4s ease both}
+</style>
 </head>
 <body>
-    <div class="app">
-        <!-- Header (no emoji) -->
-        <div class="header">
-            <a class="logo" href="#">
-                <img src="assets/Logo.png" alt="AI Studio" />
-                <span>AI<small>Studio</small></span>
-            </a>
-            <div class="badge">BETA</div>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/>
+          <path d="M3 16l5-5 4 4 3-3 4 4"/>
+        </svg>
+      </div>
+      <span class="logo-text">AI<span>Studio</span></span>
+    </a>
+    <span class="header-badge">Beta</span>
+  </div>
+</header>
+
+<div class="app">
+  <div class="main">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Prompt -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Prompt
         </div>
-
-        <!-- Main Grid -->
-        <div class="main-grid">
-            <!-- Left: Prompt + Gallery -->
-            <div class="prompt-section">
-                <div class="prompt-box">
-                    <textarea id="promptInput" placeholder="Describe your image… e.g. 'A serene mountain lake at golden hour, misty forest, cinematic lighting'"></textarea>
-                    <div class="prompt-actions">
-                        <div class="suggestions" id="suggestions"></div>
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <div class="gen-progress" id="genProgress">
-                                <div class="spinner"></div>
-                                <span id="progressLabel">Generating…</span>
-                            </div>
-                            <button class="btn-generate" id="genBtn" onclick="generate()">
-                                <!-- Feather 'play' icon -->
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="5 3 19 12 5 21 5 3" />
-                                </svg>
-                                Generate
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gallery -->
-                <div>
-                    <div class="gallery-header">
-                        <h3 id="resultCount">0 images</h3>
-                        <div class="gallery-actions">
-                            <button onclick="setLayout(2)" title="2 columns">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
-                            </button>
-                            <button onclick="setLayout(3)" title="3 columns">
-                                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="gallery-grid" id="gallery">
-                        <div class="empty-state">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/>
-                                <path d="M3 16l5-5 4 4 3-3 4 4"/>
-                            </svg>
-                            <h4>No images yet</h4>
-                            <p>Write a prompt and hit Generate</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="sidebar">
-                <!-- Model -->
-                <div class="group">
-                    <label for="modelSelect">Model</label>
-                    <select id="modelSelect" onchange="animateSelect(this)">
-                        <option value="flux-schnell">FLUX.1-schnell (fast)</option>
-                        <option value="flux-dev">FLUX.1-dev (best)</option>
-                        <option value="sdxl">Stable Diffusion XL</option>
-                        <option value="sd3">Stable Diffusion 3</option>
-                        <option value="realvis">RealVisXL (photo)</option>
-                        <option value="playground">Playground v2.5</option>
-                    </select>
-                </div>
-
-                <!-- Ratio -->
-                <div class="group">
-                    <label for="ratioSelect">Aspect Ratio</label>
-                    <select id="ratioSelect" onchange="animateSelect(this)">
-                        <option value="square">1:1</option>
-                        <option value="portrait">3:4</option>
-                        <option value="landscape" selected>4:3</option>
-                        <option value="wide">16:9</option>
-                        <option value="tall">9:16</option>
-                    </select>
-                </div>
-
-                <!-- Style -->
-                <div class="group">
-                    <label>Style</label>
-                    <div class="style-chips" id="styleChips"></div>
-                </div>
-
-                <!-- Advanced -->
-                <div class="group">
-                    <label>Advanced</label>
-                    <div class="slider-row">
-                        <div class="slider-head"><span>Steps</span><span id="stepsVal">28</span></div>
-                        <input type="range" id="steps" min="10" max="50" value="28" oninput="updateSlider(this,'stepsVal')">
-                    </div>
-                    <div class="slider-row">
-                        <div class="slider-head"><span>Guidance</span><span id="guidanceVal">7.5</span></div>
-                        <input type="range" id="guidance" min="1" max="20" step="0.5" value="7.5" oninput="updateSlider(this,'guidanceVal')">
-                    </div>
-                    <div class="slider-row">
-                        <div class="slider-head"><span>Seed</span><span id="seedVal">Random</span></div>
-                        <input type="range" id="seed" min="-1" max="9999" value="-1" oninput="updateSlider(this,'seedVal',true)">
-                    </div>
-                    <input type="text" id="negPrompt" class="neg-input" placeholder="Negative prompt (e.g. blurry, low quality)" />
-                </div>
-            </div>
+        <div class="prompt-wrap">
+          <textarea id="prompt" class="prompt-field" placeholder="Describe your image in detail… e.g. 'A serene mountain lake at golden hour, misty forest, cinematic lighting'" maxlength="500"></textarea>
+          <span class="char-count" id="charCount">0/500</span>
         </div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+
+      <!-- Negative Prompt -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          Negative Prompt
+        </div>
+        <textarea class="neg-prompt" id="negPrompt" placeholder="What to avoid… e.g. blurry, low quality, distorted" maxlength="300"></textarea>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Model -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Model
+        </div>
+        <div class="model-grid">
+          <button class="model-btn active free" data-model="pollinations-flux" onclick="selectModel(this)">
+            <span class="mb-name">Flux</span>
+            <span class="mb-desc">Photorealistic, fast</span>
+            <span class="mb-badge free">Free</span>
+          </button>
+          <button class="model-btn free" data-model="pollinations-turbo" onclick="selectModel(this)">
+            <span class="mb-name">Turbo</span>
+            <span class="mb-desc">Fastest generation</span>
+            <span class="mb-badge free">Free</span>
+          </button>
+          <button class="model-btn free" data-model="pollinations-sdxl" onclick="selectModel(this)">
+            <span class="mb-name">SDXL</span>
+            <span class="mb-desc">High detail & art</span>
+            <span class="mb-badge free">Free</span>
+          </button>
+          <button class="model-btn free" data-model="pollinations-flux-realism" onclick="selectModel(this)">
+            <span class="mb-name">Flux Realism</span>
+            <span class="mb-desc">Ultra realistic</span>
+            <span class="mb-badge free">Free</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Style -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.22 4.22l2.12 2.12m11.32 11.32l2.12 2.12M2 12h3m14 0h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+          Style
+        </div>
+        <div class="style-grid" id="styleGrid"></div>
+      </div>
+
+      <!-- Aspect Ratio -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Aspect Ratio
+        </div>
+        <div class="ratio-grid">
+          <button class="ratio-btn active" data-ratio="square" data-w="1024" data-h="1024" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:30px;height:30px"></div>
+            <span>1:1</span>
+          </button>
+          <button class="ratio-btn" data-ratio="portrait" data-w="768" data-h="1024" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:24px;height:32px"></div>
+            <span>3:4</span>
+          </button>
+          <button class="ratio-btn" data-ratio="landscape" data-w="1024" data-h="768" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:36px;height:27px"></div>
+            <span>4:3</span>
+          </button>
+          <button class="ratio-btn" data-ratio="wide" data-w="1280" data-h="720" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:40px;height:23px"></div>
+            <span>16:9</span>
+          </button>
+          <button class="ratio-btn" data-ratio="tall" data-w="720" data-h="1280" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:23px;height:40px"></div>
+            <span>9:16</span>
+          </button>
+          <button class="ratio-btn" data-ratio="ultrawide" data-w="1536" data-h="640" onclick="selectRatio(this)">
+            <div class="ratio-preview" style="width:44px;height:18px"></div>
+            <span>21:9</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sliders -->
+      <div>
+        <div class="section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="6" cy="6" r="2" fill="currentColor"/><circle cx="4" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg>
+          Parameters
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Quality Steps</span>
+            <span class="slider-val" id="stepsVal">30</span>
+          </div>
+          <input type="range" id="steps" min="10" max="50" value="30" oninput="updateSlider(this,'stepsVal')">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Guidance Scale</span>
+            <span class="slider-val" id="guidanceVal">7.5</span>
+          </div>
+          <input type="range" id="guidance" min="1" max="20" step="0.5" value="7.5" oninput="updateSlider(this,'guidanceVal')">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Seed</span>
+            <span class="slider-val" id="seedVal">Random</span>
+          </div>
+          <input type="range" id="seed" min="-1" max="9999" value="-1" oninput="updateSlider(this,'seedVal',true)">
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button class="btn-generate" id="genBtn" onclick="generate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Generate Image
+      </button>
+
+    </aside>
+
+    <!-- Canvas -->
+    <div class="canvas-area">
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <span class="toolbar-title">Generated Images</span>
+          <span class="result-count" id="resultCount">0 images</span>
+          <div class="gen-progress" id="genProgress">
+            <svg class="progress-ring" viewBox="0 0 18 18">
+              <circle cx="9" cy="9" r="7" stroke-dasharray="44" stroke-dashoffset="11"/>
+            </svg>
+            <span id="progressLabel">Generating...</span>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="icon-btn" title="2 columns" onclick="setLayout(2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+          </button>
+          <button class="icon-btn" title="3 columns" onclick="setLayout(3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
+          </button>
+          <button class="icon-btn" title="Clear all" onclick="clearAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="gallery" id="gallery">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/>
+              <path d="M3 16l5-5 4 4 3-3 4 4"/>
+            </svg>
+          </div>
+          <p class="empty-title">No images yet</p>
+          <p class="empty-sub">Write a prompt and click Generate to create your first image</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Lightbox -->
-    <div id="lightbox" onclick="if(event.target===this)closeLb()">
-        <div class="lb-content">
-            <button class="lb-close" onclick="closeLb()">✕</button>
-            <img id="lbImg" src="" alt="" />
-            <div class="lb-toolbar">
-                <button onclick="downloadLb()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download
-                </button>
-                <button onclick="copyLbUrl()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                    Copy URL
-                </button>
-            </div>
-            <p class="lb-prompt" id="lbPrompt"></p>
-        </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="if(event.target===this)closeLb()">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="closeLb()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <img class="lb-img" id="lbImg" src="" alt="">
+    <div class="lb-toolbar">
+      <button class="lb-btn" onclick="downloadLb()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </button>
+      <button class="lb-btn" onclick="copyLbUrl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy URL
+      </button>
     </div>
+    <p class="lb-prompt" id="lbPrompt"></p>
+  </div>
+</div>
 
-    <script>
-        // ── Data ──
-        const STYLES = [
-            'Photorealistic', 'Cinematic', 'Oil Painting', 'Watercolor',
-            'Anime', 'Digital Art', 'Sketch', '3D Render',
-            'Fantasy', 'Pixel Art', 'Minimalist', 'Dark Fantasy'
-        ];
-        const SUGGESTIONS = [
-            'Neon cyberpunk city at night',
-            'Portrait of a woman in golden light',
-            'Magical forest with glowing mushrooms',
-            'Abstract fluid art, vibrant colors',
-            'Underwater palace, bioluminescent',
-            'Vintage Japanese street, cherry blossom'
-        ];
+<!-- Toast -->
+<div id="toast"></div>
 
-        let selectedStyle = '';
-        let images = [];
-        let generating = false;
-        let currentLbUrl = '';
-        let currentLbPrompt = '';
+<script>
+/* ── Config ── */
+const STYLES = [
+  'Photorealistic','Cinematic','Oil Painting','Watercolor',
+  'Anime','Digital Art','Sketch','3D Render',
+  'Fantasy','Pixel Art','Minimalist','Dark Fantasy',
+];
 
-        // ── Init ──
-        (function init() {
-            buildStyles();
-            buildSuggestions();
-            updateSliderAll();
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape') closeLb();
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-            });
-        })();
+const SUGGESTIONS = [
+  'Neon cyberpunk city at night',
+  'Portrait of a woman in golden light',
+  'Magical forest with glowing mushrooms',
+  'Abstract fluid art, vibrant colors',
+  'Underwater palace, bioluminescent',
+  'Vintage Japanese street, cherry blossom',
+];
 
-        function buildStyles() {
-            const container = document.getElementById('styleChips');
-            STYLES.forEach(s => {
-                const chip = document.createElement('span');
-                chip.className = 'style-chip';
-                chip.textContent = s;
-                chip.onclick = () => {
-                    selectedStyle = (selectedStyle === s) ? '' : s;
-                    document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
-                    if (selectedStyle) chip.classList.add('active');
-                };
-                container.appendChild(chip);
-            });
-        }
+const MODEL_MAP = {
+  'pollinations-flux':          { model:'flux', label:'Flux' },
+  'pollinations-turbo':         { model:'turbo', label:'Turbo' },
+  'pollinations-sdxl':          { model:'stable-diffusion-xl-base-1.0', label:'SDXL' },
+  'pollinations-flux-realism':  { model:'flux-realism', label:'Flux Realism' },
+};
 
-        function buildSuggestions() {
-            const container = document.getElementById('suggestions');
-            const pick = SUGGESTIONS.sort(() => Math.random() - .5).slice(0, 3);
-            pick.forEach(s => {
-                const chip = document.createElement('span');
-                chip.className = 'suggest-chip';
-                chip.textContent = s;
-                chip.onclick = () => {
-                    document.getElementById('promptInput').value = s;
-                };
-                container.appendChild(chip);
-            });
-        }
+/* ── State ── */
+let selectedModel   = 'pollinations-flux';
+let selectedStyle   = '';
+let selectedRatio   = { w:1024, h:1024, key:'square' };
+let images          = [];
+let generating      = false;
+let currentLbUrl    = '';
+let currentLbPrompt = '';
 
-        function updateSlider(el, valId, isSeed = false) {
-            const v = parseFloat(el.value);
-            const d = document.getElementById(valId);
-            d.textContent = isSeed ? (v === -1 ? 'Random' : Math.round(v)) : (Number.isInteger(v) ? v : v.toFixed(1));
-            const pct = ((v - +el.min) / (+el.max - +el.min) * 100).toFixed(1);
-            el.style.setProperty('--val', pct + '%');
-        }
+/* ── Init ── */
+(function init(){
+  buildStyles();
+  buildSuggestions();
+  updateSliderAll();
+  const ta = document.getElementById('prompt');
+  ta.addEventListener('input', ()=>{
+    const n = ta.value.length;
+    const cc = document.getElementById('charCount');
+    cc.textContent = n+'/500';
+    cc.classList.toggle('warn', n>400);
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape') closeLb();
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter') generate();
+  });
+})();
 
-        function updateSliderAll() {
-            updateSlider(document.getElementById('steps'), 'stepsVal');
-            updateSlider(document.getElementById('guidance'), 'guidanceVal');
-            updateSlider(document.getElementById('seed'), 'seedVal', true);
-        }
+function buildStyles(){
+  const g = document.getElementById('styleGrid');
+  STYLES.forEach(s=>{
+    const b = document.createElement('button');
+    b.className='style-chip';
+    b.textContent=s;
+    b.onclick=()=>{
+      selectedStyle=(selectedStyle===s)?'':s;
+      document.querySelectorAll('.style-chip').forEach(c=>c.classList.remove('active'));
+      if(selectedStyle)b.classList.add('active');
+    };
+    g.appendChild(b);
+  });
+}
 
-        function setLayout(n) {
-            const g = document.getElementById('gallery');
-            g.className = 'gallery-grid ' + (n === 2 ? 'two-col' : 'three-col');
-        }
+function buildSuggestions(){
+  const g = document.getElementById('suggestions');
+  const pick = SUGGESTIONS.sort(()=>Math.random()-.5).slice(0,3);
+  pick.forEach(s=>{
+    const b = document.createElement('button');
+    b.className='suggest-chip'; b.textContent=s;
+    b.onclick=()=>{ document.getElementById('prompt').value=s; document.getElementById('charCount').textContent=s.length+'/500'; };
+    g.appendChild(b);
+  });
+}
 
-        // ── Animation on select change ──
-        function animateSelect(el) {
-            el.classList.remove('select-animate');
-            // force reflow
-            void el.offsetWidth;
-            el.classList.add('select-animate');
-        }
+/* ── Selectors ── */
+function selectModel(el){
+  selectedModel=el.dataset.model;
+  document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
 
-        // ── Generate ──
-        async function generate() {
-            if (generating) return;
-            const prompt = document.getElementById('promptInput').value.trim();
-            if (!prompt) { toast('Please enter a prompt'); return; }
+function selectRatio(el){
+  selectedRatio={ w:+el.dataset.w, h:+el.dataset.h, key:el.dataset.ratio };
+  document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
 
-            generating = true;
-            const btn = document.getElementById('genBtn');
-            btn.disabled = true;
-            btn.innerHTML = 'Generating…';
-            document.getElementById('genProgress').classList.add('show');
-            document.getElementById('progressLabel').textContent = 'Creating…';
+function updateSlider(el, valId, isSeed=false){
+  const v = parseFloat(el.value);
+  const d = document.getElementById(valId);
+  d.textContent = isSeed ? (v===-1?'Random':Math.round(v)) : (Number.isInteger(v)?v:v.toFixed(1));
+  const pct = ((v-+el.min)/(+el.max-+el.min)*100).toFixed(1);
+  el.style.setProperty('--val',pct+'%');
+}
 
-            const neg = document.getElementById('negPrompt').value.trim();
-            const model = document.getElementById('modelSelect').value;
-            const ratio = document.getElementById('ratioSelect').value;
-            const steps = parseInt(document.getElementById('steps').value);
-            const guidance = parseFloat(document.getElementById('guidance').value);
-            const seed = parseInt(document.getElementById('seed').value);
+function updateSliderAll(){
+  updateSlider(document.getElementById('steps'),'stepsVal');
+  updateSlider(document.getElementById('guidance'),'guidanceVal');
+  updateSlider(document.getElementById('seed'),'seedVal',true);
+}
 
-            const style = selectedStyle;
-            const fullPrompt = [prompt, style, neg ? `avoid: ${neg}` : ''].filter(Boolean).join(', ');
+function setLayout(n){
+  const g=document.getElementById('gallery');
+  g.className='gallery layout-'+n+'col';
+}
 
-            // Add skeleton
-            const skeleton = document.createElement('div');
-            skeleton.className = 'img-card skeleton';
-            skeleton.style.aspectRatio = '1';
-            skeleton.style.background = '#1a1a2a';
-            const gallery = document.getElementById('gallery');
-            const empty = gallery.querySelector('.empty-state');
-            if (empty) empty.remove();
-            gallery.prepend(skeleton);
+/* ── Generate ── */
+async function generate(){
+  if(generating)return;
+  const prompt=document.getElementById('prompt').value.trim();
+  const neg=document.getElementById('negPrompt').value.trim();
+  if(!prompt){toast('Please enter a prompt','error');return;}
 
-            try {
-                const resp = await fetch('/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: fullPrompt,
-                        negative: neg,
-                        model: model,
-                        ratio: ratio,
-                        steps: steps,
-                        guidance: guidance,
-                        seed: seed,
-                        style: style
-                    })
-                });
-                const data = await resp.json();
-                if (data.error) throw new Error(data.error);
+  generating=true;
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  btn.innerHTML=`<svg class="progress-ring" viewBox="0 0 18 18" style="width:18px;height:18px"><circle cx="9" cy="9" r="7" stroke="white" stroke-width="2" fill="none" stroke-dasharray="44" stroke-dashoffset="11"/></svg> Generating...`;
+  document.getElementById('genProgress').classList.add('show');
+  document.getElementById('progressLabel').textContent='Creating image…';
 
-                skeleton.remove();
-                addImageCard(data.image, prompt);
-                images.push({ url: data.image, prompt });
-                updateCount();
-                toast('Image generated!');
-            } catch (err) {
-                skeleton.remove();
-                if (gallery.querySelectorAll('.img-card').length === 0) showEmpty();
-                toast('Error: ' + err.message, 'error');
-                console.error(err);
-            }
+  // Add skeleton
+  const skeleton=document.createElement('div');
+  skeleton.className='skeleton';
+  skeleton.style.aspectRatio=selectedRatio.w+'/'+selectedRatio.h;
+  const gallery=document.getElementById('gallery');
+  const empty=gallery.querySelector('.empty-state');
+  if(empty)empty.remove();
+  gallery.prepend(skeleton);
 
-            generating = false;
-            btn.disabled = false;
-            btn.innerHTML =
-                `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> Generate`;
-            document.getElementById('genProgress').classList.remove('show');
-        }
+  try{
+    const modelInfo=MODEL_MAP[selectedModel]||MODEL_MAP['pollinations-flux'];
+    const fullPrompt=[prompt,selectedStyle,neg?`avoid: ${neg}`:''].filter(Boolean).join(', ');
+    const seed=parseInt(document.getElementById('seed').value);
+    const actualSeed=seed===-1?Math.floor(Math.random()*99999):seed;
+    const url=buildPollinationsUrl(fullPrompt,selectedRatio.w,selectedRatio.h,modelInfo.model,actualSeed);
 
-        function addImageCard(url, prompt) {
-            const card = document.createElement('div');
-            card.className = 'img-card';
-            const ratio = document.getElementById('ratioSelect').value;
-            card.style.setProperty('--ar', '1');
-            card.innerHTML = `
-                <img src="${url}" alt="${prompt}" />
-                <div class="ratio-badge">${ratio}</div>
-                <div class="overlay">
-                    <button onclick="event.stopPropagation(); openLb('${url}','${prompt.replace(/'/g,"\\'")}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6s1-2 5-2 7 4 7 4-2 5-7 5-5-3-5-7z"/><circle cx="12" cy="12" r="3"/><path d="M14 6s1-2 5-2c4 0 4 3 4 3s-1 5-6 5"/></svg>
-                        View
-                    </button>
-                    <button onclick="event.stopPropagation(); downloadImg('${url}','${prompt.replace(/'/g,"\\'")}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Save
-                    </button>
-                </div>
-            `;
-            const gallery = document.getElementById('gallery');
-            gallery.prepend(card);
-        }
+    document.getElementById('progressLabel').textContent='Loading image…';
+    const imgUrl=await loadImage(url);
 
-        function showEmpty() {
-            const g = document.getElementById('gallery');
-            if (g.querySelector('.empty-state')) return;
-            g.innerHTML = `
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/><path d="M3 16l5-5 4 4 3-3 4 4"/></svg>
-                    <h4>No images yet</h4>
-                    <p>Write a prompt and hit Generate</p>
-                </div>
-            `;
-        }
+    skeleton.remove();
+    addImageCard(imgUrl,prompt,selectedRatio);
+    images.push({url:imgUrl,prompt,ratio:selectedRatio,model:modelInfo.label,seed:actualSeed});
+    updateCount();
+    toast('Image generated!','success');
+  }catch(err){
+    skeleton.remove();
+    if(gallery.querySelectorAll('.img-card').length===0) showEmpty();
+    toast('Generation failed. Try again.','error');
+    console.error(err);
+  }
 
-        function updateCount() {
-            const n = document.querySelectorAll('.img-card:not(.skeleton)').length;
-            document.getElementById('resultCount').textContent = n + ' image' + (n !== 1 ? 's' : '');
-        }
+  generating=false;
+  btn.disabled=false;
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Image`;
+  document.getElementById('genProgress').classList.remove('show');
+}
 
-        // ── Lightbox ──
-        function openLb(url, prompt) {
-            currentLbUrl = url;
-            currentLbPrompt = prompt;
-            document.getElementById('lbImg').src = url;
-            document.getElementById('lbPrompt').textContent = prompt;
-            document.getElementById('lightbox').classList.add('open');
-        }
+function buildPollinationsUrl(prompt,w,h,model,seed){
+  const enc=encodeURIComponent(prompt);
+  return `https://image.pollinations.ai/prompt/${enc}?width=${w}&height=${h}&model=${model}&seed=${seed}&nologo=true&enhance=true`;
+}
 
-        function closeLb() {
-            document.getElementById('lightbox').classList.remove('open');
-        }
+function loadImage(url){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>res(url);
+    img.onerror=()=>rej(new Error('Failed to load'));
+    img.src=url;
+    setTimeout(()=>rej(new Error('Timeout')),60000);
+  });
+}
 
-        function downloadLb() {
-            downloadImg(currentLbUrl, currentLbPrompt);
-        }
+function addImageCard(url,prompt,ratio){
+  const ar=(ratio.w/ratio.h).toFixed(3);
+  const card=document.createElement('div');
+  card.className='img-card fade-in-up';
+  card.style.setProperty('--ar',ar);
+  card.innerHTML=`
+    <img src="${url}" alt="${prompt}" style="aspect-ratio:${ratio.w}/${ratio.h}">
+    <div class="img-card-badge">${ratio.w}×${ratio.h}</div>
+    <div class="img-card-overlay">
+      <p class="img-card-prompt">${prompt}</p>
+      <div class="img-card-actions">
+        <button class="card-action-btn" onclick="openLb('${url}','${prompt.replace(/'/g,"\\'")}',event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 6s1-2 5-2 7 4 7 4-2 5-7 5-5-3-5-7z"/><circle cx="12" cy="12" r="3"/><path d="M14 6s1-2 5-2c4 0 4 3 4 3s-1 5-6 5"/></svg>
+          View
+        </button>
+        <button class="card-action-btn" onclick="downloadImg('${url}','${prompt.replace(/'/g,"\\'")}',event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save
+        </button>
+      </div>
+    </div>`;
+  const gallery=document.getElementById('gallery');
+  gallery.prepend(card);
+}
 
-        function copyLbUrl() {
-            navigator.clipboard.writeText(currentLbUrl).then(() => toast('URL copied!'));
-        }
+function showEmpty(){
+  const g=document.getElementById('gallery');
+  if(g.querySelector('.empty-state'))return;
+  g.innerHTML=`<div class="empty-state">
+    <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M15 8h.01M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/><path d="M3 16l5-5 4 4 3-3 4 4"/></svg></div>
+    <p class="empty-title">No images yet</p>
+    <p class="empty-sub">Write a prompt and click Generate to create your first image</p>
+  </div>`;
+}
 
-        async function downloadImg(url, prompt) {
-            try {
-                const res = await fetch(url);
-                const blob = await res.blob();
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'ai-image-' + (prompt || '').slice(0, 30).replace(/\s+/g, '-') + '.png';
-                a.click();
-                toast('Downloading…');
-            } catch {
-                window.open(url, '_blank');
-            }
-        }
+function updateCount(){
+  const n=document.querySelectorAll('.img-card').length;
+  document.getElementById('resultCount').textContent=n+' image'+(n!==1?'s':'');
+}
 
-        // ── Toast ──
-        function toast(msg, type = 'info') {
-            const el = document.createElement('div');
-            el.style.cssText = `
-                position: fixed; bottom: 24px; right: 24px;
-                background: #1a1a2a; color: #eaeef2;
-                padding: 12px 20px; border-radius: 12px;
-                border: 1px solid rgba(255,255,255,0.06);
-                box-shadow: 0 8px 30px rgba(0,0,0,0.8);
-                font-size: 13px; z-index: 1000;
-                transform: translateX(120px); opacity: 0;
-                transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
-                max-width: 300px;
-            `;
-            el.textContent = msg;
-            document.body.appendChild(el);
-            requestAnimationFrame(() => {
-                el.style.transform = 'translateX(0)';
-                el.style.opacity = '1';
-            });
-            setTimeout(() => {
-                el.style.transform = 'translateX(120px)';
-                el.style.opacity = '0';
-                setTimeout(() => el.remove(), 400);
-            }, 3000);
-        }
-    </script>
+function clearAll(){
+  if(!images.length){toast('Nothing to clear','info');return;}
+  images=[];
+  document.getElementById('gallery').innerHTML='';
+  showEmpty();
+  updateCount();
+  toast('Gallery cleared','info');
+}
+
+/* ── Lightbox ── */
+function openLb(url,prompt,e){
+  if(e)e.stopPropagation();
+  currentLbUrl=url; currentLbPrompt=prompt;
+  document.getElementById('lbImg').src=url;
+  document.getElementById('lbPrompt').textContent=prompt;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLb(){document.getElementById('lightbox').classList.remove('open');}
+function downloadLb(){downloadImg(currentLbUrl,currentLbPrompt);}
+function copyLbUrl(){navigator.clipboard.writeText(currentLbUrl).then(()=>toast('URL copied!','success'));}
+
+async function downloadImg(url,prompt,e){
+  if(e)e.stopPropagation();
+  try{
+    const res=await fetch(url);
+    const blob=await res.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='ai-image-'+(prompt||'').slice(0,30).replace(/\s+/g,'-')+'.png';
+    a.click();
+    toast('Downloading…','success');
+  }catch{
+    window.open(url,'_blank');
+  }
+}
+
+/* ── Toast ── */
+function toast(msg,type='info'){
+  const wrap=document.getElementById('toast');
+  const el=document.createElement('div');
+  el.className=`toast-item ${type}`;
+  el.innerHTML=`<div class="toast-dot"></div><span>${msg}</span>`;
+  wrap.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3000);
+}
+</script>
 </body>
 </html>
