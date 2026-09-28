@@ -10,12 +10,10 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-
 @dataclass(frozen=True)
 class ProviderConfig:
     hf_key: str = os.getenv("HF_API_KEY", "")
     horde_key: str = os.getenv("HORDE_APIKEY", "0000000000")
-
 
 @dataclass(frozen=True)
 class GenerationParams:
@@ -27,7 +25,6 @@ class GenerationParams:
     guidance: float = 7.5
     seed: int = -1
     style: str = ""
-
 
 CFG = ProviderConfig()
 
@@ -49,18 +46,14 @@ RATIO_MAP = {
 
 DEFAULT_NEG = "blurry, low quality, distorted, watermark"
 
-
 class ProviderError(Exception):
     pass
-
 
 def _resolve_seed(seed: int) -> int:
     return random.randint(0, 99999) if seed == -1 else seed
 
-
 def _to_data_uri(content: bytes, mime: str) -> str:
     return f"data:image/{mime};base64,{base64.b64encode(content).decode()}"
-
 
 class HuggingFaceProvider:
     name = "Hugging Face"
@@ -96,7 +89,6 @@ class HuggingFaceProvider:
             raise ProviderError(f"status {resp.status_code}: {resp.text[:200]}")
 
         return _to_data_uri(resp.content, "jpeg")
-
 
 class StableHordeProvider:
     name = "Stable Horde"
@@ -154,7 +146,6 @@ class StableHordeProvider:
         img_bytes = requests.get(img_url, timeout=30).content
         return _to_data_uri(img_bytes, "webp")
 
-
 class PollinationsProvider:
     name = "Pollinations"
 
@@ -171,9 +162,7 @@ class PollinationsProvider:
             raise ProviderError("request failed")
         return _to_data_uri(resp.content, "jpeg")
 
-
 PROVIDERS = (HuggingFaceProvider, StableHordeProvider, PollinationsProvider)
-
 
 def _parse_params(data: dict) -> GenerationParams:
     return GenerationParams(
@@ -186,7 +175,6 @@ def _parse_params(data: dict) -> GenerationParams:
         seed=int(data.get("seed", -1)),
         style=(data.get("style") or "").strip(),
     )
-
 
 def _apply_style(p: GenerationParams) -> GenerationParams:
     if not p.style:
@@ -202,11 +190,9 @@ def _apply_style(p: GenerationParams) -> GenerationParams:
         style=p.style,
     )
 
-
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 @app.route("/generate", methods=["POST"])
 def generate():
@@ -233,11 +219,9 @@ def generate():
 
     return jsonify({"error": "All providers failed", "details": errors}), 500
 
-
 @app.route("/models")
 def list_models():
     return jsonify(list(MODELS.keys()))
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
